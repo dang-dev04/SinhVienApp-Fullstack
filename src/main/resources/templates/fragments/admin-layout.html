@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- Fragment Head (Sử dụng chung cho tất cả trang Admin) -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Admin Dashboard</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS BootStrap (dùng CDN mới nhất) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Icons: Lucide & Phong cách cơ bản -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Custom CSS Phong Cách SaaS -->
+    <style>
+        :root {
+            /* SaaS Modern Color Scheme */
+            --bg-body: #F8FAFC;         /* slate-50 */
+            --bg-surface: #FFFFFF;
+            --sidebar-width: 250px;
+            --header-height: 64px;
+            
+            --color-primary: #2563EB;   /* blue-600 */
+            --color-primary-hover: #1D4ED8;
+            --color-success: #22C55E;   /* green-500 */
+            --color-warning: #F59E0B;   /* amber-500 */
+            --color-danger: #EF4444;    /* red-500 */
+            
+            --text-heading: #0F172A;    /* slate-900 */
+            --text-body: #334155;       /* slate-700 */
+            --text-muted: #64748B;      /* slate-500 */
+            
+            --border-color: #E2E8F0;    /* slate-200 */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-body);
+            overflow-x: hidden;
+            letter-spacing: -0.01em;
+        }
+
+        h1, h2, h3, h4, h5, h6 { color: var(--text-heading); font-weight: 600; }
+        
+        /* Cấu trúc Sidebar hiện đại */
+        .saas-sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .saas-sidebar .brand-title {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-heading);
+            border-bottom: 1px solid var(--border-color);
+            text-decoration: none;
+        }
+
+        .saas-sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            margin: 4px 16px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .saas-sidebar .nav-link:hover {
+            background-color: #F1F5F9; /* slate-100 */
+            color: var(--text-heading);
+        }
+
+        .saas-sidebar .nav-link.active {
+            background-color: #EFF6FF; /* blue-50 */
+            color: var(--color-primary);
+        }
+        
+        .saas-sidebar .nav-link i[data-lucide] {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Giao diện Vùng làm việc chính */
+        .saas-main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header chuyên nghiệp */
+        .saas-header {
+            height: var(--header-height);
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .saas-header .search-bar {
+            position: relative;
+            width: 320px;
+        }
+
+        .saas-header .search-bar i[data-lucide] {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+        }
+
+        .saas-header .search-bar input {
+            width: 100%;
+            padding: 8px 16px 8px 38px;
+            border-radius: 9999px; /* Rounded full */
+            border: 1px solid var(--border-color);
+            background-color: #F8FAFC;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .saas-header .search-bar input:focus {
+            outline: none;
+            background-color: #FFF;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Tiện ích chung cho các trang */
+        .saas-content {
+            padding: 32px;
+            flex-grow: 1;
+        }
+
+        .saas-card {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-saas {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 8px 16px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .btn-saas-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-saas-primary:hover {
+            background-color: var(--color-primary-hover);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-saas-outline {
+            background-color: transparent;
+            border-color: var(--border-color);
+            color: var(--text-body);
+        }
+
+        .btn-saas-outline:hover {
+            background-color: #F1F5F9;
+        }
+
+        /* Badge thiết kế dạng Pills */
+        .badge-saas {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+        .badge-success-soft { background-color: #DCFCE7; color: #166534; }
+        .badge-warning-soft { background-color: #FEF3C7; color: #92400E; }
+        .badge-danger-soft { background-color: #FEE2E2; color: #991B1B; }
+        .badge-info-soft { background-color: #E0F2FE; color: #075985; }
+
+        /* Animation Loading (Skeleton) */
+        .skeleton {
+            background: #e2e8f0;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 4px;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+
+<!-- Fragment Sidebar -->
+<div th:fragment="sidebar(activeMenu)" class="saas-sidebar">
+    <a href="/index" class="brand-title">
+        <i data-lucide="library" class="me-2 text-primary" style="width: 24px; height: 24px;"></i>
+        <span>Library<span class="text-primary">Admin</span></span>
+    </a>
+    
+    <div class="px-3 pt-4 pb-2 text-xs fw-bold text-muted text-uppercase tracking-wider">
+        Quản Lý Chính
+    </div>
+    
+    <ul class="nav flex-column mb-auto">
+        <li class="nav-item">
+            <a href="/index" class="nav-link" th:classappend="${activeMenu == 'books'} ? 'active'">
+                <i data-lucide="book-copy"></i>
+                <span>Kho Sách</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/borrows" class="nav-link" th:classappend="${activeMenu == 'borrows'} ? 'active'">
+                <i data-lucide="repeat"></i>
+                <span>Phiếu Mượn Trả</span>
+            </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+            <a href="/users" class="nav-link" th:classappend="${activeMenu == 'users'} ? 'active'">
+                <i data-lucide="users"></i>
+                <span>Thành Viên</span>
+            </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+            <a href="/stats" class="nav-link" th:classappend="${activeMenu == 'stats'} ? 'active'">
+                <i data-lucide="bar-chart-3"></i>
+                <span>Thống Kê</span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Dưới cùng của Sidebar -->
+    <div class="mt-auto p-3">
+        <div class="saas-card bg-light p-3 border-0">
+            <p class="small text-muted mb-2">Hệ thống Quản lý Thư Viện hiện đại.</p>
+            <span class="badge bg-primary">v2.0.0</span>
+        </div>
+    </div>
+</div>
+
+<!-- Fragment Top Header -->
+<div th:fragment="header(showSearch)" class="saas-header">
+    <div class="d-flex align-items-center">
+        <!-- Search bar (optional hiển thị) -->
+        <div class="search-bar" th:if="${showSearch}">
+            <i data-lucide="search"></i>
+            <form action="" method="GET" id="globalSearchForm">
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tra cứu sách, tác giả nhanh...">
+            </form>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+        <!-- Notification Icon -->
+        <button class="btn btn-link text-muted p-0 position-relative">
+            <i data-lucide="bell" style="width: 20px; height: 20px;"></i>
+            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                <span class="visually-hidden">New alerts</span>
+            </span>
+        </button>
+
+        <!-- Divider -->
+        <div style="height: 24px; width: 1px; background-color: var(--border-color);"></div>
+
+        <!-- User Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-link text-decoration-none p-0 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                <span class="text-sm fw-medium text-dark d-none d-md-block" sec:authentication="name">Admin User</span>
+                <img th:src="@{'https://ui-avatars.com/api/?name=' + ${#authentication.name} + '&background=2563EB&color=fff'}" 
+                     class="rounded-circle border" width="32" height="32" alt="Avatar">
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
+                <li><h6 class="dropdown-header">Tài khoản quản trị</h6></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i data-lucide="user" style="width: 16px; height: 16px;"></i> Hồ sơ cá nhân</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i data-lucide="settings" style="width: 16px; height: 16px;"></i> Cài đặt hệ thống</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="/logout"><i data-lucide="log-out" style="width: 16px; height: 16px;"></i> Đăng xuất</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Fragment Scripts (Khởi tạo JS) -->
+<div th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Init Lucide Icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        // Global Toast Notification Factory
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true
+        });
+
+        function showToast(icon, title) {
+            Toast.fire({ icon: icon, title: title });
+        }
+        
+        // Confirmation Modal Factory
+        function confirmAction(title, text, confirmCallback) {
+            Swal.fire({
+                title: title, text: text, icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#EF4444', cancelButtonColor: '#64748B',
+                confirmButtonText: 'Đồng ý', cancelButtonText: 'Hủy'
+            }).then((result) => { if (result.isConfirmed) confirmCallback(); });
+        }
+    </script>
+</div>
+</html>

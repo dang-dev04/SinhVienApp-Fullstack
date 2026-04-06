@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - Hệ Thống Thư Viện</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #ffffff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            background-color: #fff;
+        }
+        .card-header {
+            background-color: transparent;
+            border-bottom: none;
+            padding-top: 40px;
+            text-align: center;
+        }
+        .btn-login {
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            /* Sửa nút bấm cho nổi bật trên nền trắng */
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+        }
+        .form-control {
+            background-color: #f8f9fa; /* Input màu xám cực nhạt cho dễ nhìn */
+            border: 1px solid #eee;
+        }
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #0d6efd;
+            background-color: #fff;
+        }
+        .input-group-text {
+            background-color: #f8f9fa;
+            border: 1px solid #eee;
+            border-right: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card login-card p-4">
+    <div class="card-header">
+        <div class="mb-3">
+            <i class="fa-solid fa-book-reader fa-4x text-primary"></i>
+        </div>
+        <h4 class="fw-bold text-dark">Quản Lý Thư Viện</h4>
+        <p class="text-muted small">Vui lòng đăng nhập để quản trị</p>
+    </div>
+
+    <div class="card-body">
+        <form th:action="@{/login}" method="POST">
+            <div class="mb-3">
+                <label class="form-label text-secondary fw-bold small">Tài khoản</label>
+                <div class="input-group">
+                    <span class="input-group-text text-muted"><i class="fa-solid fa-user"></i></span>
+                    <input type="text" name="username" id="username" class="form-control"  required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label text-secondary fw-bold small">Mật khẩu</label>
+                <div class="input-group">
+                    <span class="input-group-text text-muted"><i class="fa-solid fa-lock"></i></span>
+                    <input type="password" name="password" id="password" class="form-control"  required>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-login">
+                    ĐĂNG NHẬP
+                </button>
+            </div>
+
+            <div th:if="${param.error}" class="text-danger text-center mt-3 small">
+                <i class="fa-solid fa-circle-exclamation"></i> Sai tài khoản hoặc mật khẩu!
+            </div>
+            
+            <div th:if="${param.registered}" class="text-success text-center mt-3 small">
+                <i class="fa-solid fa-check-circle"></i> Đăng ký thành công! Hãy đăng nhập.
+            </div>
+
+            <div class="text-center mt-4 small">
+                Chưa có thẻ đọc giả? <a th:href="@{/register}" class="text-decoration-none fw-bold text-primary">Mở thẻ ngay</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-footer text-center bg-white border-0 text-muted small pb-3">
+        &copy; 2025 Library Project
+    </div>
+</div>
+
+
+
+</body>
+</html>

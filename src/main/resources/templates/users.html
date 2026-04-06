@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Thành Viên - Admin</title>
+    <!-- Gắn Layout chuẩn -->
+    <th:block th:replace="~{fragments/admin-layout :: head('Quản Lý Độc Giả')}"></th:block>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/admin-layout :: sidebar('users')}"></div>
+
+    <!-- Main Content Area -->
+    <div class="saas-main">
+        <!-- Top Header hiện thanh tìm kiếm -->
+        <div th:replace="~{fragments/admin-layout :: header(true)}"></div>
+
+        <!-- Page Content -->
+        <div class="saas-content">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="mb-1">Tài khoản Độc Giả</h2>
+                    <p class="text-muted mb-0">Quản lý và cấp quyền truy cập hệ thống thư viện.</p>
+                </div>
+                <div class="d-flex gap-3">
+                    <button class="btn-saas btn-saas-outline">
+                        <i data-lucide="download" style="width:16px;"></i> Xuất Csv
+                    </button>
+                    <button class="btn-saas btn-saas-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i data-lucide="user-plus" style="width:18px;"></i>
+                        <span>Thêm mới</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Server Toast Feedback -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <i data-lucide="check-circle-2" class="me-2 text-success"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <i data-lucide="alert-circle" class="me-2 text-danger"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Profile Cards / Hybrid Table -->
+            <div class="saas-card overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.95rem;">
+                        <thead class="bg-light text-muted border-bottom" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <tr>
+                                <th class="ps-4 py-3 fw-semibold border-bottom-0" style="width: 350px;">Khách Hàng (Độc giả)</th>
+                                <th class="py-3 fw-semibold border-bottom-0">Trạng Thái Kho</th>
+                                <th class="py-3 fw-semibold border-bottom-0">Nhóm Quyền</th>
+                                <th class="pe-4 py-3 fw-semibold border-bottom-0 text-end">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${users == null || users.isEmpty()}">
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i data-lucide="users-2" class="mb-2" style="width:48px;height:48px;opacity:0.3;"></i>
+                                    <p class="mb-0">Không tìm thấy độc giả nào phù hợp.</p>
+                                </td>
+                            </tr>
+                            
+                            <tr th:each="u : ${users}" style="transition: all 0.2s;">
+                                <!-- User Profile Cell -->
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img th:src="@{'https://ui-avatars.com/api/?name=' + ${u.fullName} + '&background=F1F5F9&color=334155&rounded=true&bold=true'}" 
+                                             class="flex-shrink-0 shadow-sm border" width="42" height="42" alt="Avatar">
+                                        <div>
+                                            <h6 class="mb-0 text-dark fw-bold" th:text="${u.fullName}">Tên Độc giả</h6>
+                                            <div class="text-muted d-flex align-items-center gap-1 mt-1" style="font-size: 0.8rem;">
+                                                <i data-lucide="mail" style="width:12px;height:12px;"></i> <span th:text="${u.email}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Lịch sử mượn & Hoạt động -->
+                                <td class="py-3">
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="text-muted small">Đã giao dịch: <strong class="text-dark" th:text="${u.borrowRequests != null ? u.borrowRequests.size() : 0} + ' lần'"></strong></span>
+                                        <span class="badge-saas badge-info-soft d-inline-block" style="width: fit-content;" th:if="${u.borrowRequests != null && u.borrowRequests.size() > 0}">Active Member</span>
+                                        <span class="badge-saas bg-light text-muted border d-inline-block" style="width: fit-content;" th:if="${u.borrowRequests == null || u.borrowRequests.size() == 0}">New</span>
+                                    </div>
+                                </td>
+                                
+                                <td class="py-3">
+                                    <div class="badge-saas bg-light text-dark border"><i data-lucide="shield" style="width:12px;" class="me-1"></i> READER_ROLE</div>
+                                </td>
+
+                                <!-- Quick Actions -->
+                                <td class="pe-4 py-3 text-end action-cell">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button class="btn btn-sm btn-light border text-secondary rounded-circle"
+                                                th:attr="data-id=${u.id}, data-name=${u.fullName}, data-email=${u.email}"
+                                                onclick="fillEditForm(this)" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa hồ sơ" style="width:34px;height:34px;">
+                                            <i data-lucide="user-cog" style="width:16px;height:16px;"></i>
+                                        </button>
+
+                                        <button th:data-url="@{/user/delete/{id}(id=${u.id})}" 
+                                                class="btn btn-sm btn-light border text-danger rounded-circle" 
+                                                onclick="confirmDeleteUser(this.getAttribute('data-url'))" title="Xóa tài khoản" style="width:34px;height:34px;">
+                                            <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div> <!-- /.saas-content -->
+    </div> <!-- /.saas-main -->
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Modal Thêm Độc Giả -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <form action="/user/add" method="POST">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold text-dark w-100">Khai Báo Thành Viên Mới</h5>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">Họ và Tên <span class="text-danger">*</span></label>
+                            <input type="text" name="fullName" class="form-control form-control-lg bg-light border-0 shadow-none" required placeholder="Nguyễn Văn A">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">Email (Dùng làm ID đăng nhập) <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control form-control-lg bg-light border-0 shadow-none" required placeholder="reader@email.com">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                        <button type="button" class="btn text-muted fw-medium" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-saas-primary rounded-pill px-4">Tạo Tài Khoản</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập Nhật Độc Giả -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <form action="/user/update" method="POST">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold text-dark w-100">Cập Nhật Hồ Sơ</h5>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="editId" name="id">
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">Họ và Tên</label>
+                            <input type="text" id="editName" name="fullName" class="form-control form-control-lg bg-light border-0 shadow-none" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">Email</label>
+                            <input type="email" id="editEmail" name="email" class="form-control form-control-lg bg-light border-0 shadow-none" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                        <button type="submit" class="btn btn-saas-primary w-100 rounded-pill">Lưu Hồ Sơ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <div th:replace="~{fragments/admin-layout :: scripts}"></div>
+    <script>
+        function fillEditForm(button) {
+            document.getElementById("editId").value = button.getAttribute("data-id");
+            document.getElementById("editName").value = button.getAttribute("data-name");
+            document.getElementById("editEmail").value = button.getAttribute("data-email");
+        }
+
+        function confirmDeleteUser(url) {
+            confirmAction('Bạn chắc chắn chứ?', 'Xóa tài khoản này đồng nghĩa tất cả dữ liệu mượn trả liên quan có thể bị ảnh hưởng.', () => {
+                window.location.href = url;
+            });
+        }
+    </script>
+</body>
+</html>

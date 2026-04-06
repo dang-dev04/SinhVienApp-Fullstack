@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <title th:text="${title}">Thư Viện E-Library</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        :root {
+            --primary-bg: #f4f7f6;
+            --brand-color: #4f46e5;
+            --brand-hover: #4338ca;
+            --text-main: #1f2937;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s ease;
+        }
+        body {
+            background-color: var(--primary-bg);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar-brand {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--brand-color) !important;
+        }
+        .navbar-custom {
+            background: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+        }
+        .nav-link {
+            font-weight: 500;
+            color: #4b5563 !important;
+            transition: var(--transition);
+        }
+        .nav-link:hover, .nav-link.active {
+            color: var(--brand-color) !important;
+        }
+        .book-card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: var(--card-shadow);
+            background: white;
+            cursor: pointer;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover-shadow);
+        }
+        .book-image-container {
+            position: relative;
+            height: 280px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .book-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+        .book-card:hover .book-image {
+            transform: scale(1.05);
+        }
+        .badge-category {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            backdrop-filter: blur(4px);
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeletonLoading 1.5s infinite;
+        }
+        @keyframes skeletonLoading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .btn-brand {
+            background-color: var(--brand-color);
+            border-color: var(--brand-color);
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .btn-brand:hover {
+            background-color: var(--brand-hover);
+            border-color: var(--brand-hover);
+            color: white;
+        }
+        main { flex: 1; }
+        .footer {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 20px 0;
+            margin-top: auto;
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body th:fragment="navbar">
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top mb-5">
+        <div class="container">
+            <a class="navbar-brand fs-4" href="/reader/home">
+                <i class="fa-solid fa-book-open text-primary me-2"></i>E-LIBRARY
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link px-3" th:classappend="${currentMenu == 'home'} ? 'active'" href="/reader/home">Khám Phá Sách</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" th:classappend="${currentMenu == 'active-borrows'} ? 'active'" href="/reader/active-borrows">Sách Đang Mượn</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" th:classappend="${currentMenu == 'history'} ? 'active'" href="/reader/history">Lịch Sử</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="/reader/profile" class="text-decoration-none text-dark fw-bold hover-primary">
+                        <img th:src="@{'https://ui-avatars.com/api/?name=' + ${#authentication.name} + '&background=random'}" class="rounded-circle me-2" width="35" height="35" alt="Avatar">
+                        <span th:text="${#authentication.name}">Reader</span>
+                    </a>
+                    <a href="/logout" class="btn btn-sm btn-outline-danger px-3 rounded-pill">Đăng xuất</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+</body>
+
+<div th:fragment="footer">
+    <footer class="footer">
+        <div class="container fw-medium">
+            &copy; 2026 E-Library Student App. Crafted with <i class="fa-solid fa-heart text-danger"></i>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function removeSkeleton(el) {
+            el.classList.remove('skeleton');
+        }
+        
+        // Cấu hình SweetAlert mặc định
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        });
+    </script>
+</div>
+</html>

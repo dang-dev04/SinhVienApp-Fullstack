@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{reader/layout :: head(${book.title} + ' - Thư viện E-Library')}">
+</head>
+<body>
+
+<div th:replace="~{reader/layout :: navbar}"></div>
+
+<main>
+    <div class="container my-5">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/reader/home" class="text-decoration-none"><i class="fa-solid fa-home me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${book.title}">Tên sách</li>
+            </ol>
+        </nav>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="row g-0">
+                <div class="col-md-4 col-lg-3 p-4 bg-light d-flex justify-content-center align-items-start">
+                    <img th:src="${book.image != null && !book.image.empty} ? ${book.image} : 'https://via.placeholder.com/400x600?text=No+Cover'" 
+                         class="img-fluid rounded-3 shadow" alt="Book Cover" style="max-height: 400px; object-fit: cover;">
+                </div>
+                <div class="col-md-8 col-lg-9 p-4 p-lg-5">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-primary px-3 py-2 rounded-pill mb-2" th:text="${book.category != null ? book.category.name : 'Khác'}">Sách CN</span>
+                    </div>
+                    <h2 class="fw-bold mb-3" th:text="${book.title}">Tên Sách</h2>
+                    <h5 class="text-muted mb-4"><i class="fa-solid fa-pen-nib me-2"></i>Tác giả: <span th:text="${book.author}" class="text-dark">Author Name</span></h5>
+                    
+                    <div class="row mb-4">
+                        <div class="col-sm-6 mb-2">
+                            <strong><i class="fa-solid fa-barcode text-secondary me-2"></i>Mã ISBN:</strong> <span th:text="${book.isbn}"></span>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <strong><i class="fa-solid fa-building text-secondary me-2"></i>NXB:</strong> <span th:text="${book.publisher}"></span>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <strong><i class="fa-solid fa-calendar-alt text-secondary me-2"></i>Năm XB:</strong> <span th:text="${book.publishYear}"></span>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <strong><i class="fa-solid fa-layer-group text-secondary me-2"></i>Số lượng kho:</strong> 
+                            <span th:classappend="${book.availableQuantity > 0 ? 'text-success fw-bold' : 'text-danger fw-bold'}" 
+                                  th:text="${book.availableQuantity + ' / ' + book.totalQuantity}"></span>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted opacity-25">
+
+                    <div class="mt-4">
+                        <h5 class="fw-bold mb-3">Tóm tắt nội dung</h5>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            Đây là một tác phẩm xuất sắc của tác giả <span th:text="${book.author}"></span>, được xuất bản vào năm <span th:text="${book.publishYear}"></span>. 
+                            Cuốn sách cung cấp những kiến thức vô cùng quý giá thuộc lĩnh vực <span th:text="${book.category != null ? book.category.name : 'chuyên ngành'}"></span>. 
+                            Với ngôn ngữ dễ hiểu và nội dung sâu sắc, đây chắc chắn là cuốn sách không thể bỏ qua tại hệ thống thư viện của chúng tôi.
+                        </p>
+                    </div>
+
+                    <div class="mt-5 d-flex gap-3">
+                        <form th:action="@{'/reader/borrow/' + ${book.id}}" method="post">
+                            <button type="submit" class="btn btn-brand btn-lg rounded-pill px-5 shadow-sm" 
+                                    th:disabled="${book.availableQuantity <= 0}"
+                                    onclick="return confirmBorrow(event, this);">
+                                <i class="fa-solid fa-hand-holding-heart me-2"></i>
+                                <span th:text="${book.availableQuantity > 0 ? 'Đăng Ký Mượn Sách' : 'Đã Hết Sách'}">Đăng Ký Mượn</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{reader/layout :: footer}"></div>
+
+<script>
+function confirmBorrow(e, btn) {
+    e.preventDefault();
+    Swal.fire({
+        title: 'Đăng ký mượn?',
+        text: "Yêu cầu của bạn sẽ được gửi tới Thủ thư để duyệt.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Đồng ý mượn',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            btn.parentElement.submit();
+        }
+    })
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<div th:fragment="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 250px; height: 100vh; position: fixed;">
+    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <i class="fa-solid fa-book-open fa-2x me-2"></i>
+        <span class="fs-4">Thư Viện</span>
+    </a>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        
+        <li class="nav-item">
+            <a href="/index" class="nav-link text-white" 
+               th:classappend="${currentPageName == 'books'} ? 'active bg-primary' : ''">
+                <i class="fa-solid fa-book me-2"></i>
+                Kho Sách
+            </a>
+        </li>
+
+        <li>
+            <a href="/borrows" class="nav-link text-white" 
+               th:classappend="${currentPageName == 'borrows'} ? 'active bg-primary' : ''">
+                <i class="fa-solid fa-list-check me-2"></i>
+                Mượn Trả
+            </a>
+        </li>
+
+        <li sec:authorize="hasRole('ADMIN')">
+            <a href="/users" class="nav-link text-white" 
+               th:classappend="${currentPageName == 'users'} ? 'active bg-primary' : ''">
+                <i class="fa-solid fa-users me-2"></i>
+                Độc Giả
+            </a>
+        </li>
+		<li sec:authorize="hasRole('ADMIN')">
+		            <a href="/stats" class="nav-link text-white" 
+		               th:classappend="${currentPageName == 'stats'} ? 'active bg-primary' : ''">
+		                <i class="fa-solid fa-chart-line me-2"></i>
+		                Thống kê
+		            </a>
+		        </li>
+
+    </ul>
+    <hr>
+    
+    <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="fa-solid fa-circle-user fa-xl me-2"></i>
+            <strong sec:authentication="name">Admin</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+            <li><a class="dropdown-item" href="/logout">Đăng xuất</a></li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>

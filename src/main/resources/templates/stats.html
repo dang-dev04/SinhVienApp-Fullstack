@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Thống Kê - Dashboard</title>
+    <!-- Gắn Layout chuẩn -->
+    <th:block th:replace="~{fragments/admin-layout :: head('Báo Cáo Thống Kê')}"></th:block>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/admin-layout :: sidebar('stats')}"></div>
+
+    <!-- Main Content Area -->
+    <div class="saas-main">
+        <!-- Top Header -->
+        <div th:replace="~{fragments/admin-layout :: header(false)}"></div>
+
+        <!-- Page Content -->
+        <div class="saas-content">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="mb-1">Báo Cáo Tổng Quan</h2>
+                    <p class="text-muted mb-0">Hiệu suất hoạt động thư viện và chỉ số giao dịch.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn-saas btn-saas-outline">
+                        <i data-lucide="download-cloud" style="width:16px;"></i> Xuất báo cáo
+                    </button>
+                    <button class="btn-saas bg-white border shadow-sm text-dark">
+                        <i data-lucide="calendar" style="width:16px;"></i> 30 ngày qua
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Mini Cards (Mockup Layout cho Tương lai) -->
+            <div class="row g-4 mb-4">
+                <!-- Thẻ 1 -->
+                <div class="col-md-3">
+                    <div class="saas-card p-3 h-100">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="text-muted small fw-semibold mb-1 text-uppercase">Giao dịch mượn</p>
+                                <h3 class="fw-bold mb-0 text-dark">Tích cực</h3>
+                            </div>
+                            <div class="rounded bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                                <i data-lucide="trending-up"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-success small fw-medium">
+                            <i data-lucide="arrow-up-right" style="width:14px;"></i> Hoạt động ổn định
+                        </div>
+                    </div>
+                </div>
+                <!-- Thẻ 2 -->
+                <div class="col-md-3">
+                    <div class="saas-card p-3 h-100">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p class="text-muted small fw-semibold mb-1 text-uppercase">Tỷ lệ thu hồi</p>
+                                <h3 class="fw-bold mb-0 text-dark">Cao</h3>
+                            </div>
+                            <div class="rounded bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                                <i data-lucide="check-square"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Biểu đồ chính -->
+            <div class="saas-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold text-dark mb-0">Lưu lượng Mượn / Trả Gần Đây</h5>
+                    <button class="btn btn-sm btn-light border"><i data-lucide="more-horizontal" style="width:16px;"></i></button>
+                </div>
+                <div style="position: relative; height:400px; width:100%;">
+                    <canvas id="borrowChart"></canvas>
+                </div>
+            </div>
+
+        </div> <!-- saas-content -->
+    </div> <!-- saas-main -->
+
+    <!-- Scripts -->
+    <div th:replace="~{fragments/admin-layout :: scripts}"></div>
+    <!-- Script render biểu đồ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        var labelDates = /*[[${dates}]]*/ [];
+        var dataBorrow = /*[[${borrowCounts}]]*/ [];
+        var dataReturn = /*[[${returnCounts}]]*/ [];
+
+        const ctx = document.getElementById('borrowChart');
+
+        // Font chữ thiết kế Chart theo bộ font Inter
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748B'; // text-muted
+
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labelDates, 
+                    datasets: [
+                        {
+                            label: 'Lượt Mượn',
+                            data: dataBorrow,
+                            backgroundColor: '#3B82F6', // Blue 500
+                            borderRadius: 4, // bo góc cột
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Lượt Trả', 
+                            data: dataReturn,
+                            backgroundColor: '#22C55E', // Green 500
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', align: 'end', labels: { boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+                        tooltip: { backgroundColor: '#0F172A', titleFont: { size: 13 }, bodyFont: { size: 13 }, padding: 12, cornerRadius: 8 }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { color: '#E2E8F0', drawBorder: false }, // nét đứt mảnh
+                            ticks: { stepSize: 1, padding: 10 }
+                        },
+                        x: {
+                            border: { display: false },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

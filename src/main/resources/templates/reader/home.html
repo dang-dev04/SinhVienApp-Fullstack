@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{reader/layout :: head('Trang chủ - Thư viện E-Library')}">
+</head>
+<body>
+
+<div th:replace="~{reader/layout :: navbar}"></div>
+
+<main>
+    <!-- Hero Banner -->
+    <div class="container-fluid mb-5 p-0 position-relative" style="background: linear-gradient(135deg, var(--brand-color) 0%, #2563eb 100%); color: white; padding: 80px 0 !important; overflow: hidden;">
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); opacity: 0.1;"></div>
+        <div class="container position-relative z-1">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 fw-bold mb-3">Chào mừng đến với E-Library</h1>
+                    <p class="lead mb-4 opacity-75">Khám phá kho tàng kiến thức với hàng ngàn đầu sách phong phú, được cập nhật liên tục.</p>
+                    
+                    <form th:action="@{/reader/home}" method="get" class="d-flex bg-white rounded-pill p-2 shadow-sm" style="max-width: 500px;">
+                        <input type="text" name="keyword" class="form-control border-0 bg-transparent shadow-none px-3" placeholder="Tìm kiếm tên sách, tác giả..." th:value="${keyword}">
+                        <button type="submit" class="btn btn-brand rounded-pill px-4"><i class="fa-solid fa-search me-1"></i> Tìm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sách List -->
+    <div class="container mb-5">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <h3 class="fw-bold m-0"><i class="fa-solid fa-fire text-danger me-2"></i>Sách Nổi Bật</h3>
+        </div>
+        
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <!-- Vòng lặp Sách -->
+            <div class="col" th:each="book : ${books}">
+                <div class="card book-card h-100" th:onclick="'window.location.href=\'/reader/book/' + ${book.id} + '\''">
+                    <div class="book-image-container skeleton">
+                        <img th:src="${book.image != null && !book.image.empty} ? ${book.image} : 'https://via.placeholder.com/300x400?text=No+Cover'" 
+                             class="book-image" alt="Book Cover" onload="removeSkeleton(this.parentElement)">
+                        <span class="badge-category" th:text="${book.category != null ? book.category.name : 'Khác'}">Công nghệ</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold text-truncate" th:title="${book.title}" th:text="${book.title}">Tên Sách</h5>
+                        <p class="card-text text-muted small mb-3"><i class="fa-solid fa-pen-nib me-1"></i> <span th:text="${book.author}">Tác giả</span></p>
+                        
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}" 
+                                  th:text="${book.availableQuantity > 0 ? 'Còn ' + book.availableQuantity + ' quyển' : 'Hết sách'}">
+                            </span>
+                            <a th:href="@{'/reader/book/' + ${book.id}}" class="btn btn-sm btn-outline-primary rounded-pill">Chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phân trang -->
+        <nav th:if="${totalPages > 1}" class="mt-5">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                    <a class="page-link rounded-start-pill" th:href="@{/reader/home(pageNo=${currentPage - 1}, keyword=${keyword})}"><i class="fa-solid fa-chevron-left"></i></a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}" th:classappend="${currentPage == i} ? 'active'">
+                    <a class="page-link" th:href="@{/reader/home(pageNo=${i}, keyword=${keyword})}" th:text="${i}"></a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                    <a class="page-link rounded-end-pill" th:href="@{/reader/home(pageNo=${currentPage + 1}, keyword=${keyword})}"><i class="fa-solid fa-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</main>
+
+<div th:replace="~{reader/layout :: footer}"></div>
+</body>
+</html>
