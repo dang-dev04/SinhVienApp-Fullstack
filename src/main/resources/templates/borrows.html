@@ -2,129 +2,248 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Phiếu Mượn Trả - Admin</title>
-    <!-- Gắn Layout chuẩn -->
     <th:block th:replace="~{fragments/admin-layout :: head('Phiếu Mượn Trả')}"></th:block>
+    <style>
+        /* ── Filter bar ─────────────────────────────────────────── */
+        .filter-bar { display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; }
+        .filter-pill {
+            padding:.35rem 1rem; border-radius:999px; font-size:.8rem; font-weight:600;
+            border:2px solid transparent; cursor:pointer; text-decoration:none;
+            transition: all .18s ease;
+        }
+        .filter-pill:hover { opacity:.85; }
+        .filter-pill.active { border-color: currentColor; }
+
+        .fp-all      { background:#f1f5f9; color:#475569; }
+        .fp-pending  { background:#fef3c7; color:#92400e; }
+        .fp-borrowing{ background:#dbeafe; color:#1e40af; }
+        .fp-overdue  { background:#fee2e2; color:#991b1b; }
+        .fp-returned { background:#dcfce7; color:#15803d; }
+        .fp-rejected { background:#f1f5f9; color:#64748b; }
+
+        /* ── Row highlight ─────────────────────────────────────── */
+        tr.row-pending  { background: #fffbeb !important; }
+        tr.row-overdue  { background: #fff5f5 !important; }
+        tr.row-pending td:first-child { border-left: 3px solid #f59e0b; }
+        tr.row-overdue  td:first-child { border-left: 3px solid #ef4444; }
+
+        /* ── Pulse badge ───────────────────────────────────────── */
+        @keyframes pulse-badge {
+          0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
+          50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+        }
+        .badge-pulse { animation: pulse-badge 1.5s infinite; }
+
+        /* ── Search input ──────────────────────────────────────── */
+        .search-wrap { position:relative; }
+        .search-wrap input { padding-left: 2.2rem; }
+        .search-wrap .icon-search {
+            position:absolute; left:.7rem; top:50%; transform:translateY(-50%);
+            color:#94a3b8; pointer-events:none;
+        }
+    </style>
 </head>
 
 <body>
-    <!-- Sidebar -->
     <div th:replace="~{fragments/admin-layout :: sidebar('borrows')}"></div>
 
-    <!-- Main Content Area -->
     <div class="saas-main">
-        <!-- Top Header (No search because we don't have it explicitly handled) -->
         <div th:replace="~{fragments/admin-layout :: header(false)}"></div>
 
-        <!-- Page Content -->
         <div class="saas-content">
+
+            <!-- ── Page Title ────────────────────────────────────── -->
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
-                    <h2 class="mb-1">Quản lý Mượn Trả</h2>
-                    <p class="text-muted mb-0">Theo dõi, xét duyệt và thu hồi ấn phẩm của độc giả.</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn-saas btn-saas-outline">
-                        <i data-lucide="calendar" style="width:16px;"></i> Hôm nay
-                    </button>
-                    <button class="btn-saas btn-saas-outline">
-                        <i data-lucide="sliders-horizontal" style="width:16px;"></i> Lọc chi tiết
-                    </button>
+                    <h2 class="mb-1">
+                        Quản lý Mượn Trả
+                        <span th:if="${pendingCount > 0}"
+                              class="badge bg-danger ms-2 badge-pulse"
+                              style="font-size:.7rem; vertical-align:middle;"
+                              th:text="${pendingCount} + ' chờ duyệt'">
+                        </span>
+                    </h2>
+                    <p class="text-muted mb-0">Theo dõi, xét duyệt và thu hồi ấn phẩm. Yêu cầu PENDING được đưa lên đầu danh sách tự động.</p>
                 </div>
             </div>
 
-            <!-- Bảng dữ liệu chính -->
+            <!-- ── Filter + Search ───────────────────────────────── -->
+            <div class="saas-card p-3 mb-3">
+                <form method="get" action="/borrows" class="d-flex flex-wrap gap-3 align-items-center">
+
+                    <!-- Filter pills -->
+                    <div class="filter-bar">
+                        <a th:href="@{/borrows(keyword=${keyword})}"
+                           th:classappend="${(statusFilter == null || statusFilter == '') ? 'active' : ''}"
+                           class="filter-pill fp-all">Tất cả</a>
+
+                        <a th:href="@{/borrows(statusFilter='PENDING',keyword=${keyword})}"
+                           th:classappend="${statusFilter == 'PENDING' ? 'active' : ''}"
+                           class="filter-pill fp-pending">
+                            ⏳ Chờ duyệt
+                            <span th:if="${pendingCount > 0}"
+                                  class="badge bg-danger ms-1 rounded-pill"
+                                  th:text="${pendingCount}"></span>
+                        </a>
+
+                        <a th:href="@{/borrows(statusFilter='BORROWING',keyword=${keyword})}"
+                           th:classappend="${statusFilter == 'BORROWING' ? 'active' : ''}"
+                           class="filter-pill fp-borrowing">📖 Đang mượn</a>
+
+                        <a th:href="@{/borrows(statusFilter='OVERDUE',keyword=${keyword})}"
+                           th:classappend="${statusFilter == 'OVERDUE' ? 'active' : ''}"
+                           class="filter-pill fp-overdue">🔴 Quá hạn</a>
+
+                        <a th:href="@{/borrows(statusFilter='RETURNED',keyword=${keyword})}"
+                           th:classappend="${statusFilter == 'RETURNED' ? 'active' : ''}"
+                           class="filter-pill fp-returned">✅ Đã trả</a>
+
+                        <a th:href="@{/borrows(statusFilter='REJECTED',keyword=${keyword})}"
+                           th:classappend="${statusFilter == 'REJECTED' ? 'active' : ''}"
+                           class="filter-pill fp-rejected">❌ Từ chối</a>
+                    </div>
+
+                    <!-- Search box -->
+                    <div class="search-wrap ms-auto" style="min-width:240px;">
+                        <i data-lucide="search" class="icon-search" style="width:15px;"></i>
+                        <input type="text" name="keyword" class="form-control form-control-sm"
+                               placeholder="Tìm tên người mượn, tên sách..."
+                               th:value="${keyword}">
+                        <input type="hidden" name="statusFilter" th:value="${statusFilter}">
+                    </div>
+
+                    <button type="submit" class="btn-saas btn-saas-primary btn-sm">
+                        <i data-lucide="search" style="width:14px;"></i> Tìm
+                    </button>
+                    <a th:href="@{/borrows}" class="btn-saas btn-saas-outline btn-sm">Reset</a>
+                </form>
+            </div>
+
+            <!-- ── Table ─────────────────────────────────────────── -->
             <div class="saas-card overflow-hidden">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
-                        <thead class="bg-light text-muted border-bottom" style="font-size: 0.8rem; text-transform: uppercase;">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.875rem;">
+                        <thead class="bg-light text-muted border-bottom" style="font-size:.78rem; text-transform:uppercase;">
                             <tr>
-                                <th class="ps-4 py-3 fw-semibold border-bottom-0">Mã</th>
+                                <th class="ps-4 py-3 fw-semibold border-bottom-0" style="width:50px;">Mã</th>
                                 <th class="py-3 fw-semibold border-bottom-0">Độc Giả</th>
                                 <th class="py-3 fw-semibold border-bottom-0">Ấn Phẩm</th>
-                                <th class="py-3 fw-semibold border-bottom-0">
-                                    <a th:href="@{'/borrows?pageNo=' + ${currentPage} + '&sortField=borrowDate&sortDir=' + ${reverseSortDir}}" class="text-muted text-decoration-none d-flex align-items-center gap-1">
-                                        Chu Kỳ <i data-lucide="arrow-up-down" style="width:12px;"></i>
-                                    </a>
-                                </th>
-                                <th class="py-3 fw-semibold border-bottom-0">
-                                    <a th:href="@{'/borrows?pageNo=' + ${currentPage} + '&sortField=status&sortDir=' + ${reverseSortDir}}" class="text-muted text-decoration-none d-flex align-items-center gap-1">
-                                        Trạng Thái <i data-lucide="arrow-up-down" style="width:12px;"></i>
-                                    </a>
-                                </th>
+                                <th class="py-3 fw-semibold border-bottom-0">Thời Gian</th>
+                                <th class="py-3 fw-semibold border-bottom-0">Trạng Thái</th>
                                 <th class="pe-4 py-3 fw-semibold border-bottom-0 text-end">Xử Lý</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Empty state -->
                             <tr th:if="${borrows == null || borrows.isEmpty()}">
                                 <td colspan="6" class="text-center py-5 text-muted">
-                                    <i data-lucide="file-x-2" class="mb-2" style="width:48px;height:48px;opacity:0.3;"></i>
-                                    <p class="mb-0">Chưa có giao dịch mượn trả nào được ghi nhận.</p>
+                                    <i data-lucide="inbox" class="mb-2" style="width:48px;height:48px;opacity:.3;"></i>
+                                    <p class="mb-0">Không có dữ liệu phù hợp.</p>
                                 </td>
                             </tr>
-                            
-                            <!-- Dòng dl có highlight nếu RENEW_PENDING hoặc ngày trả cận kề/quá hạn -->
-                            <tr th:each="req : ${borrows}" class="position-relative" style="transition: all 0.2s;">
-                                <td class="ps-4 py-3 text-muted fw-medium" th:text="'#' + ${req.id}">#1</td>
-                                
+
+                            <tr th:each="req : ${borrows}"
+                                th:classappend="${req.status == 'PENDING' ? 'row-pending' : (req.status == 'OVERDUE' ? 'row-overdue' : '')}">
+
+                                <!-- ID -->
+                                <td class="ps-4 py-3 text-muted fw-medium" th:text="'#' + ${req.id}"></td>
+
+                                <!-- Độc giả -->
                                 <td class="py-3">
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fw-bold" style="width:36px;height:36px;font-size:12px;" th:text="${#strings.substring(req.user.fullName, 0, 1)}">A</div>
+                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary fw-bold"
+                                             style="width:34px;height:34px;font-size:12px;flex-shrink:0;"
+                                             th:text="${#strings.substring(req.user.fullName, 0, 1)}">A</div>
                                         <div>
-                                            <div class="fw-bold text-dark" th:text="${req.user.fullName}">Tên Độc giả</div>
-                                            <div class="text-muted" style="font-size:0.75rem;" th:text="${req.user.email}">user@email.com</div>
+                                            <div class="fw-semibold text-dark lh-sm" th:text="${req.user.fullName}"></div>
+                                            <div class="text-muted" style="font-size:.73rem;" th:text="${req.user.email}"></div>
                                         </div>
                                     </div>
                                 </td>
 
+                                <!-- Ấn phẩm -->
                                 <td class="py-3">
-                                    <div class="fw-semibold text-dark text-truncate" style="max-width:250px;" th:text="${req.book.title}">Tên sách</div>
+                                    <div class="fw-semibold text-dark text-truncate" style="max-width:220px;" th:text="${req.book.title}"></div>
+                                    <div class="text-muted" style="font-size:.73rem;" th:text="${req.book.author}"></div>
                                 </td>
 
+                                <!-- Thời gian -->
                                 <td class="py-3">
-                                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.85rem;" th:if="${req.borrowDate != null}">
-                                        <i data-lucide="calendar" style="width:14px;"></i>
-                                        <span th:text="${#temporals.format(req.borrowDate, 'dd/MM/yyyy')}"></span>
-                                        <i data-lucide="arrow-right" style="width:12px;"></i>
-                                        <span class="fw-medium text-dark" th:if="${req.returnDate != null}" th:text="${#temporals.format(req.returnDate, 'dd/MM/yyyy')}"></span>
-                                        <span class="fst-italic" th:if="${req.returnDate == null}">...</span>
+                                    <div class="d-flex flex-column gap-1 text-muted" style="font-size:.8rem;">
+                                        <!-- Ngày gửi yêu cầu -->
+                                        <div class="d-flex align-items-center gap-1" th:if="${req.createdAt != null}">
+                                            <i data-lucide="send" style="width:12px;" title="Ngày gửi yêu cầu"></i>
+                                            <span th:text="${#temporals.format(req.createdAt, 'dd/MM HH:mm')}"></span>
+                                        </div>
+                                        <!-- Ngày mượn thực tế -->
+                                        <div class="d-flex align-items-center gap-1" th:if="${req.borrowDate != null}">
+                                            <i data-lucide="log-out" style="width:12px;" title="Ngày mượn"></i>
+                                            <span th:text="${#temporals.format(req.borrowDate, 'dd/MM/yyyy')}"></span>
+                                        </div>
+                                        <!-- Hạn trả -->
+                                        <div class="d-flex align-items-center gap-1 fw-medium"
+                                             th:if="${req.dueDate != null && req.returnDate == null}"
+                                             th:classappend="${req.status == 'OVERDUE' ? 'text-danger' : 'text-primary'}">
+                                            <i data-lucide="alarm-clock" style="width:12px;" title="Hạn trả"></i>
+                                            <span th:text="${#temporals.format(req.dueDate, 'dd/MM/yyyy')}"></span>
+                                        </div>
+                                        <!-- Ngày trả thực tế -->
+                                        <div class="d-flex align-items-center gap-1 text-success fw-medium" th:if="${req.returnDate != null}">
+                                            <i data-lucide="check-circle" style="width:12px;" title="Ngày trả"></i>
+                                            <span th:text="${#temporals.format(req.returnDate, 'dd/MM/yyyy')}"></span>
+                                        </div>
                                     </div>
                                 </td>
-                                
+
+                                <!-- Trạng thái -->
                                 <td class="py-3">
-                                    <!-- SaaS Badges -->
-                                    <span th:if="${req.status == 'PENDING'}" class="badge-saas bg-light text-dark border">
-                                        <i data-lucide="clock" class="me-1" style="width:12px;"></i> Chờ duyệt
+                                    <span th:if="${req.status == 'PENDING'}"    class="badge-saas" style="background:#fef3c7;color:#92400e;font-weight:700;">
+                                        <i data-lucide="clock" class="me-1" style="width:11px;"></i>Chờ duyệt
                                     </span>
-                                    <span th:if="${req.status == 'BORROWING'}" class="badge-saas badge-warning-soft">
-                                        <i data-lucide="book-open" class="me-1" style="width:12px;"></i> Đang mượn
+                                    <span th:if="${req.status == 'BORROWING'}"  class="badge-saas badge-warning-soft">
+                                        <i data-lucide="book-open" class="me-1" style="width:11px;"></i>Đang mượn
                                     </span>
-                                    <span th:if="${req.status == 'RENEW_PENDING'}" class="badge-saas badge-warning-soft" style="background:#FEF08A;color:#A16207;">
-                                        <i data-lucide="alert-circle" class="me-1" style="width:12px;"></i> Xin gia hạn
+                                    <span th:if="${req.status == 'OVERDUE'}"    class="badge-saas badge-danger-soft fw-bold border border-danger">
+                                        <i data-lucide="alert-triangle" class="me-1" style="width:11px;"></i>Quá hạn
                                     </span>
-                                    <span th:if="${req.status == 'RETURNED'}" class="badge-saas badge-success-soft">
-                                        <i data-lucide="check-circle-2" class="me-1" style="width:12px;"></i> Đã trả
+                                    <span th:if="${req.status == 'RETURNED'}"   class="badge-saas badge-success-soft">
+                                        <i data-lucide="check-circle-2" class="me-1" style="width:11px;"></i>Đã trả
                                     </span>
-                                    <span th:if="${req.status == 'REJECTED'}" class="badge-saas badge-danger-soft">
-                                        <i data-lucide="x-circle" class="me-1" style="width:12px;"></i> Từ chối
+                                    <span th:if="${req.status == 'REJECTED'}"   class="badge-saas badge-danger-soft">
+                                        <i data-lucide="x-circle" class="me-1" style="width:11px;"></i>Từ chối
                                     </span>
                                 </td>
 
+                                <!-- Xử lý -->
                                 <td class="pe-4 py-3 text-end">
                                     <div class="d-flex justify-content-end gap-2">
-                                        <!-- Xét duyệt / Từ chối -->
-                                        <form th:if="${req.status == 'PENDING'}" th:action="@{'/admin/borrow/' + ${req.id} + '/approve'}" method="post">
-                                            <button type="submit" class="btn btn-sm btn-light border text-success rounded-circle" title="Duyệt" style="width:32px;height:32px;"><i data-lucide="check" style="width:16px;"></i></button>
+                                        <!-- Duyệt / Từ chối (chỉ PENDING) -->
+                                        <form th:if="${req.status == 'PENDING'}"
+                                              th:action="@{'/admin/borrow/' + ${req.id} + '/approve'}" method="post">
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-success rounded-pill px-3 py-1"
+                                                    style="font-size:.78rem;"
+                                                    onclick="return confirm('Duyệt yêu cầu này?')">
+                                                <i data-lucide="check" style="width:13px;"></i> Duyệt
+                                            </button>
                                         </form>
-                                        <form th:if="${req.status == 'PENDING'}" th:action="@{'/admin/borrow/' + ${req.id} + '/reject'}" method="post">
-                                            <button type="submit" class="btn btn-sm btn-light border text-danger rounded-circle" title="Từ chối" style="width:32px;height:32px;"><i data-lucide="x" style="width:16px;"></i></button>
+                                        <form th:if="${req.status == 'PENDING'}"
+                                              th:action="@{'/admin/borrow/' + ${req.id} + '/reject'}" method="post">
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1"
+                                                    style="font-size:.78rem;"
+                                                    onclick="return confirm('Từ chối yêu cầu này?')">
+                                                <i data-lucide="x" style="width:13px;"></i> Từ chối
+                                            </button>
                                         </form>
-                                        
-                                        <!-- Trả sách -->
-                                        <button th:if="${req.status == 'BORROWING' || req.status == 'RENEW_PENDING'}" 
-                                           th:data-url="@{/book/return(id=${req.id})}" 
-                                           class="btn btn-sm btn-saas-outline text-primary rounded-pill py-1"
-                                           onclick="confirmReturn(this.getAttribute('data-url'))">
-                                            Thu hồi
+
+                                        <!-- Thu hồi sách (BORROWING / OVERDUE / RENEW_PENDING) -->
+                                        <button th:if="${req.status == 'BORROWING' || req.status == 'OVERDUE' || req.status == 'RENEW_PENDING'}"
+                                                th:data-url="@{/book/return(id=${req.id})}"
+                                                class="btn btn-sm btn-saas-outline rounded-pill px-3 py-1"
+                                                style="font-size:.78rem;"
+                                                onclick="confirmReturn(this.getAttribute('data-url'))">
+                                            <i data-lucide="undo-2" style="width:13px;"></i> Thu hồi
                                         </button>
                                     </div>
                                 </td>
@@ -133,34 +252,42 @@
                     </table>
                 </div>
 
-                <!-- Phân trang -->
-                <div class="d-flex justify-content-between align-items-center p-3 border-top bg-light" th:if="${totalPages > 0}">
-                    <span class="text-muted" style="font-size: 0.85rem;">Hiển thị trang <b class="text-dark" th:text="${currentPage}"></b> trên tổng <b class="text-dark" th:text="${totalPages}"></b> trang (<span th:text="${totalItems}"></span> bản ghi)</span>
-                    
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center p-3 border-top bg-light"
+                     th:if="${totalPages > 0}">
+                    <span class="text-muted" style="font-size:.82rem;">
+                        Trang <b class="text-dark" th:text="${currentPage}"></b> /
+                        <b class="text-dark" th:text="${totalPages}"></b>
+                        &nbsp;·&nbsp; <span th:text="${totalItems}"></span> bản ghi
+                    </span>
                     <nav th:if="${totalPages > 1}">
                         <ul class="pagination pagination-sm mb-0">
                             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                                <a class="page-link shadow-none" th:href="@{'/borrows?pageNo=' + ${currentPage - 1} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir}}">Lùi</a>
+                                <a class="page-link"
+                                   th:href="@{/borrows(pageNo=${currentPage - 1}, statusFilter=${statusFilter}, keyword=${keyword})}">‹</a>
                             </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}" th:classappend="${currentPage == i} ? 'active'">
-                                <a class="page-link shadow-none" th:text="${i}" th:href="@{'/borrows?pageNo=' + ${i} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir}}"></a>
+                            <li class="page-item"
+                                th:each="i : ${#numbers.sequence(1, totalPages)}"
+                                th:classappend="${currentPage == i} ? 'active'">
+                                <a class="page-link" th:text="${i}"
+                                   th:href="@{/borrows(pageNo=${i}, statusFilter=${statusFilter}, keyword=${keyword})}"></a>
                             </li>
                             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                                <a class="page-link shadow-none" th:href="@{'/borrows?pageNo=' + ${currentPage + 1} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir}}">Tiến</a>
+                                <a class="page-link"
+                                   th:href="@{/borrows(pageNo=${currentPage + 1}, statusFilter=${statusFilter}, keyword=${keyword})}">›</a>
                             </li>
                         </ul>
                     </nav>
                 </div>
             </div>
-            
-        </div>
-    </div>
 
-    <!-- Scripts -->
+        </div><!-- /saas-content -->
+    </div><!-- /saas-main -->
+
     <div th:replace="~{fragments/admin-layout :: scripts}"></div>
     <script>
         function confirmReturn(url) {
-            confirmAction('Thu hồi ấn phẩm', 'Bạn xác nhận độc giả đã trả sách tĩnh nguyên vẹn?', () => {
+            confirmAction('Thu hồi ấn phẩm', 'Bạn xác nhận độc giả đã trả sách nguyên vẹn?', () => {
                 window.location.href = url;
             });
         }

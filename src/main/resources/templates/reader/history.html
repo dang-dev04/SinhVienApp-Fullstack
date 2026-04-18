@@ -24,7 +24,8 @@
                         <tr>
                             <th scope="col" class="ps-4">Sách</th>
                             <th scope="col">Ngày Mượn</th>
-                            <th scope="col">Ngày Trả</th>
+                            <th scope="col">Hạn Trả</th>
+                            <th scope="col">Ngày Trả Thực Tế</th>
                             <th scope="col">Trạng Thái</th>
                         </tr>
                     </thead>
@@ -43,11 +44,13 @@
                                     </div>
                                 </div>
                             </td>
-                            <td th:text="${b.borrowDate != null ? b.borrowDate : '-'}"></td>
-                            <td th:text="${b.returnDate != null ? b.returnDate : '-'}"></td>
+                            <td th:text="${b.borrowDate != null ? #temporals.format(b.borrowDate, 'dd/MM/yyyy') : '-'}"></td>
+                            <td th:text="${b.dueDate != null ? #temporals.format(b.dueDate, 'dd/MM/yyyy') : '-'}"></td>
+                            <td th:text="${b.returnDate != null ? #temporals.format(b.returnDate, 'dd/MM/yyyy') : '-'}"></td>
                             <td>
                                 <span th:if="${b.status == 'PENDING'}" class="badge bg-warning text-dark border"><i class="fa-solid fa-spinner fa-spin me-1"></i>Chờ Duyệt</span>
                                 <span th:if="${b.status == 'BORROWING'}" class="badge bg-primary"><i class="fa-solid fa-book-open me-1"></i>Đang Mượn</span>
+                                <span th:if="${b.status == 'OVERDUE'}" class="badge bg-danger"><i class="fa-solid fa-circle-exclamation me-1"></i>Quá Hạn</span>
                                 <span th:if="${b.status == 'RETURNED'}" class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Đã Trả</span>
                                 <span th:if="${b.status == 'REJECTED'}" class="badge bg-danger"><i class="fa-solid fa-xmark me-1"></i>Bị Từ Chối</span>
                                 <span th:if="${b.status == 'RENEW_PENDING'}" class="badge bg-info text-dark"><i class="fa-solid fa-rotate me-1"></i>Xin Gia Hạn</span>

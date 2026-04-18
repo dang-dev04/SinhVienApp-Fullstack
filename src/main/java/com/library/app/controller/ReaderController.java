@@ -56,10 +56,16 @@ public class ReaderController {
     }
 
     @PostMapping("/borrow/{bookId}")
-    public String requestBorrow(@PathVariable Long bookId, Model model) {
+    public String requestBorrow(@PathVariable Long bookId, 
+                                @RequestParam(required = false) String dueDate, 
+                                Model model) {
         User user = getLoggedInUser();
         if (user != null) {
-            libraryService.requestBorrow(bookId, user.getId());
+            java.time.LocalDate requestedDate = null;
+            if (dueDate != null && !dueDate.trim().isEmpty()) {
+                requestedDate = java.time.LocalDate.parse(dueDate);
+            }
+            libraryService.requestBorrow(bookId, user.getId(), requestedDate);
         }
         return "redirect:/reader/active-borrows?success=true";
     }

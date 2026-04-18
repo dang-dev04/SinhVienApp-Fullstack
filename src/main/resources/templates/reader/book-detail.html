@@ -56,9 +56,14 @@
                         </p>
                     </div>
 
-                    <div class="mt-5 d-flex gap-3">
+                    <div class="mt-5">
                         <form th:action="@{'/reader/borrow/' + ${book.id}}" method="post">
-                            <button type="submit" class="btn btn-brand btn-lg rounded-pill px-5 shadow-sm" 
+                            <div class="mb-3" style="max-width: 300px;">
+                                <label for="dueDate" class="form-label fw-bold"><i class="fa-regular fa-calendar-check me-2"></i>Ngày hẹn trả dự kiến</label>
+                                <input type="date" class="form-control" id="dueDate" name="dueDate">
+                                <div class="form-text">Nếu để trống, hệ thống sẽ tự động xếp lịch hẹn trả mặc định (7 ngày).</div>
+                            </div>
+                            <button type="submit" class="btn btn-brand btn-lg rounded-pill px-5 shadow-sm mt-2" 
                                     th:disabled="${book.availableQuantity <= 0}"
                                     onclick="return confirmBorrow(event, this);">
                                 <i class="fa-solid fa-hand-holding-heart me-2"></i>
@@ -75,6 +80,20 @@
 <div th:replace="~{reader/layout :: footer}"></div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+    let dateInput = document.getElementById("dueDate");
+    if(dateInput) {
+        let today = new Date();
+        let minDate = new Date();
+        minDate.setDate(today.getDate() + 1);
+        let maxDate = new Date();
+        maxDate.setDate(today.getDate() + 30);
+        
+        dateInput.min = minDate.toISOString().split("T")[0];
+        dateInput.max = maxDate.toISOString().split("T")[0];
+    }
+});
+
 function confirmBorrow(e, btn) {
     e.preventDefault();
     Swal.fire({

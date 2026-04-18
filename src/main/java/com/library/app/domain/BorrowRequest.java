@@ -2,6 +2,7 @@ package com.library.app.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class BorrowRequest {
@@ -17,7 +18,14 @@ public class BorrowRequest {
     private User user;
     private LocalDate borrowDate;
     private LocalDate returnDate;
+    private LocalDate dueDate; 
     private String status; 
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+    }
 
     public BorrowRequest() {}
 
@@ -33,4 +41,8 @@ public class BorrowRequest {
     public void setReturnDate(LocalDate returnDate) { this.returnDate = returnDate; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public LocalDate getDueDate() { return dueDate; }
+    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

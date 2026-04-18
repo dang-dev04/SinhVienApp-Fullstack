@@ -87,23 +87,25 @@ public class AuthController {
     @GetMapping("/borrows")
     public String showBorrowHistory(Model model,
                                     @RequestParam(defaultValue = "1") int pageNo,
-                                    @RequestParam(defaultValue = "borrowDate") String sortField,
-                                    @RequestParam(defaultValue = "desc") String sortDir) {
-        
-        int pageSize = 10;
-        Page<BorrowRequest> page = libraryService.findPaginatedBorrows(pageNo, pageSize, sortField, sortDir);
-        
+                                    @RequestParam(required = false, defaultValue = "") String statusFilter,
+                                    @RequestParam(required = false, defaultValue = "") String keyword) {
+
+        int pageSize = 15;
+        Page<BorrowRequest> page = libraryService.findBorrowsWithFilter(pageNo, pageSize, statusFilter, keyword);
+
         model.addAttribute("borrows", page.getContent());
         model.addAttribute("currentPage", pageNo);
         model.addAttribute("totalPages", page.getTotalPages());
         model.addAttribute("totalItems", page.getTotalElements());
-        
-        model.addAttribute("sortField", sortField);
-        model.addAttribute("sortDir", sortDir);
-        model.addAttribute("reverseSortDir", sortDir.equals("asc") ? "desc" : "asc");
-        
+
+        model.addAttribute("statusFilter", statusFilter);
+        model.addAttribute("keyword", keyword);
+
+        // Badge: số lượng PENDING đang chờ duyệt
+        model.addAttribute("pendingCount", libraryService.countPendingBorrows());
+
         model.addAttribute("currentPageName", "borrows");
-        
+
         return "borrows";
     }
 
